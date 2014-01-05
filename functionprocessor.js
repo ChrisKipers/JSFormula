@@ -51,7 +51,7 @@ FunctionProcessor.prototype.evaluate = function(formula, object) {
 
 	var postfix = this.infixToPostFix(formula, allPosibleTokens, object);
 	var result = this.processPostFix(postfix);
-	return result;
+	return result[0][0];
 }
 
 FunctionProcessor.prototype.processPostFix = function(tokenBlocks) {
@@ -132,9 +132,9 @@ FunctionProcessor.prototype.tokenize = function(input, possibleTokens, object) {
 			if (!isNaN(token)) {
 				tokens.push(parseFloat(token))
 			} else if(FunctionProcessor.contains(functionMap,token)) { //If the token is a function we perform extra processing
-				var closingParamIndex = FunctionProcessor.findNextClosingParam(input, curTokenIndex + 1);
+				var closingParamIndex = FunctionProcessor.findNextClosingChar(input, curTokenIndex + 1, '(', ')');
 				//Process the inside of the parathesis to get the parameter values
-				var parameters = this.processPostFix(this.infixToPostFix(input.substring(curTokenIndex + 1,closingParamIndex), possibleTokens));
+				var parameters = this.processPostFix(this.infixToPostFix(input.substring(curTokenIndex + 1,closingParamIndex), possibleTokens, object));
 				//Concatinate the parameter arrays into one array
 				var concatinatedParameters = [];
 				for (var i = 0; i < parameters.length; i++) {
@@ -145,7 +145,8 @@ FunctionProcessor.prototype.tokenize = function(input, possibleTokens, object) {
 				tokens.push(result);
 				curTokenIndex = closingParamIndex;
 			} else if(objKeys.indexOf(token) != -1) {
-				var fieldData = FunctionProcessor.processesFieldInfo(object,token,input);
+				var fieldData = this.processesFieldInfo(object,token,input, curTokenIndex);
+				tokens.push(fieldData);
 			} else {
 				tokens.push(token);
 			}
@@ -197,15 +198,15 @@ Array.prototype.peek = function() {
 	}
 }
 
-Object.prototype.keys = function() {
-	var keys = [];
-	for (var key in this) {
-		if (this.hasOwnProperty(key)) {
-			keys.push(key);
-		}
-	}
-	return keys
-}
+// Object.prototype.keys = function() {
+// 	var keys = [];
+// 	for (var key in this) {
+// 		if (this.hasOwnProperty(key)) {
+// 			keys.push(key);
+// 		}
+// 	}
+// 	return keys
+// }
 
 FunctionProcessor.contains = function(map, charactor) {
 	for (var key in map) {
@@ -216,12 +217,12 @@ FunctionProcessor.contains = function(map, charactor) {
 	return false;
 }
 
-FunctionProcessor.findNextClosingParam = function(input, start) {
+FunctionProcessor.findNextClosingChar= function(input, start,openChar,closingChar) {
 	var numberOfOpen = 1;
 	for (var i = start; i < input.length; i++) {
-		if (input[i] == '(') {
+		if (input[i] == openChar) {
 			numberOfOpen++;
-		} else if (input[i] == ')') {
+		} else if (input[i] == closingChar) {
 			numberOfOpen--;
 			if (numberOfOpen == 0) {
 				return i;
@@ -240,8 +241,14 @@ FunctionProcessor.possibleMatch = function(token, possibleTokens) {
 	return false;
 }
 
-FunctionProcessor.processesFieldInfo = function(object,token,input) {
-	alert('hi')
-
-
+FunctionProcessor.prototype.processesFieldInfo = function(object,token,input,end) {
+	if (end + 1 < input.length && input[end] == '[') {
+		var endingBracket = FunctionProcessor.findNextClosingChar(input, end + 1, '[', ']')
+		var inside = input.substring(end + 1, end + endingBracket - 1);
+		var newFp = new FunctionProcessor(this.getFunctions);
+		var processedKey = newFp.evaluate(inside,object[token])
+		return processedKey;
+	} else {
+		return object[token]
+	}
 }
