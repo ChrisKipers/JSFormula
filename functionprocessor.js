@@ -130,7 +130,7 @@ FunctionProcessor.prototype.tokenize = function(input, possibleTokens, object) {
 			var token = input.substring(curIndex, curTokenIndex);
 			//If the token is a number we cast it to a number and push it to the token stack
 			if (!isNaN(token)) {
-				tokens.push(parseFloat(token))
+				tokens.push(new Number(token))
 			} else if(FunctionProcessor.contains(functionMap,token)) { //If the token is a function we perform extra processing
 				var closingParamIndex = FunctionProcessor.findNextClosingChar(input, curTokenIndex + 1, '(', ')');
 				//Process the inside of the parathesis to get the parameter values
