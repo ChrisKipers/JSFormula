@@ -51,8 +51,7 @@
 					return total;
 				}
 			}
-
-			var fp = new FunctionProcessor(functions);
+			FunctionProcessor.setFunctions(functions);
 
 			$('#calculate').click(function(){
 				var formula = $('#formula').val(),
@@ -66,7 +65,7 @@
 					} else {
 						obj = {}
 					}
-					var result = fp.evaluate(formula,obj)
+					var result = FunctionProcessor.evaluate(formula,obj)
 					reportSuccess(result);
 				} catch (err) {
 					reportError(err.message);
