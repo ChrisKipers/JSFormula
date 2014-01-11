@@ -5,6 +5,7 @@ var FunctionProcessor = (function() {
 		VAR = 2,
 		LIT = 3,
 		OPP = 4,
+		cacheEnabled = true,
 		presedence = {
 			'+' : {
 				presendence : 1,
@@ -51,7 +52,7 @@ var FunctionProcessor = (function() {
     	variableEnd = '}',
     	variableRegex = new RegExp('^' + variableOpen + '.*?' + variableEnd),
 		functionRegex = null,
-		opporatorRegex = /^\+|^-|^\\|^\*|^\^/,
+		opporatorRegex = /^\+|^-|^\/|^\*|^\^/,
 		tokenize = function(input) {
 			var curIndex = 0,
 				tokens = [],
@@ -72,7 +73,7 @@ var FunctionProcessor = (function() {
 				curRemainingString = input.substring(curIndex).trim();
 				//This part of the code check for strings
 				firstChar = input.substring(curIndex, curIndex + 1);
-				if (firstChar == '"' || firstChar == "'") {
+				if (firstChar === '"' || firstChar === "'") {
 					nextMatPosition = input.indexOf(firstChar,curIndex + 1);
 					if (nextMatPosition == -1) {
 						throw "Quote miss match";
@@ -82,7 +83,12 @@ var FunctionProcessor = (function() {
 						val : input.substring(curIndex,curIndex + nextMatPosition + 2)
 					});
 					curIndex += curIndex + nextMatPosition + 2;
-				}else if (regexMatch = getFirstRegex(variableRegex, curRemainingString)) {
+				} else if (firstChar === '(') {
+					nextMatPosition = findClosingParan(curRemainingString);
+					token = buildTreeFromFormula(curRemainingString.substring(1,nextMatPosition));
+					tokens.push(token);
+					curIndex += curIndex + nextMatPosition + 2;
+				} else if (regexMatch = getFirstRegex(variableRegex, curRemainingString)) {
 					stripedRegex = regexMatch.replace(variableOpen,'').replace(variableEnd,'');
 					tokens.push({
 						type: VAR,
@@ -96,7 +102,8 @@ var FunctionProcessor = (function() {
 					paramsUnparsed = findParameters(stripFirstParam.substring(1, stripFirstParam.length - 1));
 					params = [];
 					for (var i = 0, max = paramsUnparsed.length; i < max; i++) {
-						params.push(tokenize(paramsUnparsed[i], functions));
+						var newParam = 
+						params.push(buildTreeFromFormula(paramsUnparsed[i]));
 					}
 					tokens.push({
 						type: FUNC,
@@ -171,6 +178,22 @@ var FunctionProcessor = (function() {
 			params.push(input);
 			return params;
 		},
+		findClosingParan = function(input) {
+			var numberOfUnclosed = 0,
+				currentChar;
+			for (var i = 0, max = input.length; i < max; i++) {
+				currentChar = input[i];
+				if (currentChar === '(') {
+					numberOfUnclosed++;
+				} else if (currentChar === ')') {
+					numberOfUnclosed--;
+					if (numberOfUnclosed === 0) {
+						return i;
+					}
+				}
+			}
+			throw "No Closing Parentheses found";
+		},
 		infixToPostFix = function(tokens) {
 			var stack =[],
 				postFix = [],
@@ -241,11 +264,11 @@ var FunctionProcessor = (function() {
 			}
 			return postFix[0];
 		},
-		eval = function(tree, object) {
+		evalTree = function(tree, object) {
 			if (tree.type === FUNC) {
 				var paramResults = [];
 				for (var i = 0, max = tree.params.length; i < max; i++) {
-					paramResults.push(eval(tree.params[i],object));
+					paramResults.push(evalTree(tree.params[i],object));
 				}
 				return tree.func.apply(this, paramResults);
 			} else if (tree.type === VAR) {
@@ -262,25 +285,30 @@ var FunctionProcessor = (function() {
 			}
 			return curObject;
 		},
-		buildTreeFromScratch = function(input) {
-			var tokens = tokenize(input),
+		buildTreeFromFormula = function(input) {
+			var tree,
+				tokens,
 				postFix;
-			console.log(tokens);
-			postFix = infixToPostFix(tokens);
-			console.log(postFix);
-			return buildTree(postFix);
 
+			if (cacheEnabled) {
+				if(tree = cache[input]) {
+					return tree;
+				}
+			}
+
+			if (!tree) {
+				tokens = tokenize(input);
+				postFix = infixToPostFix(tokens);
+				tree = buildTree(postFix);
+				if (cacheEnabled) {
+					cache[input] = tree;
+				}
+				return tree;
+			}
 		},
 		calculate = function(input, object) {
-			var tree;
-
-			if (tree = cache[input]) {
-				return eval(tree, object);
-			} else {
-				tree = buildTreeFromScratch(input);
-				cache[input] = tree;
-			}
-			return eval(tree, object);
+			var tree = buildTreeFromFormula(input);
+			return evalTree(tree, object);
 		},
 		setFunctions = function(newFunctions) {
 			var functionRegexs = [],
@@ -307,10 +335,14 @@ var FunctionProcessor = (function() {
 			} else {
 				variableRegex = null;
 			}
+		},
+		setCacheEnabled = function(ce) {
+			cacheEnabled = ce;
 		}
 
 	return {
 		"setFunctions" : setFunctions,
-		"calculate" : calculate
+		"calculate" : calculate,
+		'setCacheEnabled' : setCacheEnabled
 	};
 }());
