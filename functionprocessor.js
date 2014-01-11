@@ -314,16 +314,3 @@ var FunctionProcessor = (function() {
 		"calculate" : calculate
 	};
 }());
-
-function calcWithtime(input, object) {
-	var start = (new Date()).getTime(),
-		end,
-		miliseconds,
-		results;
-	results = FunctionProcessor.calculate(input, object);
-	end	= (new Date()).getTime();
-	console.log(start,end)
-	miliseconds = end - start;
-	console.log('Results: ', results)
-	console.log('Time: ',miliseconds);
-}
