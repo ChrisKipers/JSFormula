@@ -49,7 +49,7 @@ var FunctionProcessor = (function() {
 		},
 		variableOpen = '{',
     	variableEnd = '}',
-    	variableRegex = new RegExp('^' + variableOpen + '.*' + variableEnd),
+    	variableRegex = new RegExp('^' + variableOpen + '.*?' + variableEnd),
 		functionRegex = null,
 		opporatorRegex = /^\+|^-|^\\|^\*|^\^/,
 		tokenize = function(input) {
@@ -65,7 +65,8 @@ var FunctionProcessor = (function() {
 				paramsUnparsed,
 				params,
 				stripFirstParam,
-				opperator;
+				opperator,
+				stripedRegex;
 
 			while (curIndex < inputLen) {
 				curRemainingString = input.substring(curIndex).trim();
@@ -75,22 +76,19 @@ var FunctionProcessor = (function() {
 					nextMatPosition = input.indexOf(firstChar,curIndex + 1);
 					if (nextMatPosition == -1) {
 						throw "Quote miss match";
-					} else {
-						tokens.push({
-							type: LIT,
-							val : input.substring(curIndex,curIndex + nextMatPosition + 2)
-						});
-						curIndex += curIndex + nextMatPosition + 2;
-						continue;
 					}
+					tokens.push({
+						type: LIT,
+						val : input.substring(curIndex,curIndex + nextMatPosition + 2)
+					});
+					curIndex += curIndex + nextMatPosition + 2;
 				}else if (regexMatch = getFirstRegex(variableRegex, curRemainingString)) {
-					regexMatch = regexMatch.remove(variableOpen).remove(variableEnd);
+					stripedRegex = regexMatch.replace(variableOpen,'').replace(variableEnd,'');
 					tokens.push({
 						type: VAR,
-						val: regexMatch
+						val: stripedRegex
 					});
 					curIndex = curIndex + 1 + regexMatch.length;
-					break;
 				} else if (regexMatch = getFirstRegex(functionRegex,curRemainingString)) {
 					nextMatPosition = regexMatch.indexOf('(');
 					funcName = regexMatch.substring(0,nextMatPosition);
@@ -106,7 +104,6 @@ var FunctionProcessor = (function() {
 						params: params
 					});
 					curIndex = curIndex + 1 + regexMatch.length;
-					break;
 				} else if (regexMatch = getFirstRegex(opporatorRegex, curRemainingString)) {
 					opperator = presedence[regexMatch];
 					tokens.push(opperator);
@@ -268,7 +265,9 @@ var FunctionProcessor = (function() {
 		buildTreeFromScratch = function(input) {
 			var tokens = tokenize(input),
 				postFix;
+			console.log(tokens);
 			postFix = infixToPostFix(tokens);
+			console.log(postFix);
 			return buildTree(postFix);
 
 		},
@@ -304,7 +303,7 @@ var FunctionProcessor = (function() {
 			if (open && close) {
 				variableOpen = open;
     			variableEnd = close;
-    			variableRegex = new RegExp('^' + variableOpen + '.*' + variableEnd);
+    			variableRegex = new RegExp('^' + variableOpen + '.*?' + variableEnd);
 			} else {
 				variableRegex = null;
 			}
@@ -315,3 +314,16 @@ var FunctionProcessor = (function() {
 		"calculate" : calculate
 	};
 }());
+
+function calcWithtime(input, object) {
+	var start = (new Date()).getTime(),
+		end,
+		miliseconds,
+		results;
+	results = FunctionProcessor.calculate(input, object);
+	end	= (new Date()).getTime();
+	console.log(start,end)
+	miliseconds = end - start;
+	console.log('Results: ', results)
+	console.log('Time: ',miliseconds);
+}
