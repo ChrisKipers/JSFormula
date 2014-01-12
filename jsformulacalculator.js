@@ -342,10 +342,18 @@ var JSFormulaCalculator = (function() {
 		},
 		setCacheEnabled = function(ce) {
 			cacheEnabled = ce;
+		},
+		buildFunction = function(formula) {
+			var tree = buildTreeFromFormula(formula);
+			var newFunction = function(object) {
+				return evalTree(tree, object);
+			};
+			return newFunction;
 		}
 
 		calculate.setFunctions = setFunctions;
 		calculate.setCacheEnabled = setCacheEnabled;
+		calculate.getFunction = buildFunction;
 		return {
 			noConflict: function() {
 				return calculate
