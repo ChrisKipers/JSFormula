@@ -22,7 +22,7 @@
 			$('#error-div').hide();
 			$('#result-div').hide();
 			$('#json-obj').val('{"a":[1,2,3,4]}');
-			$('#formula').val('sum(a) / len(a)');
+			$('#formula').val('sum({a}) / len({a})');
 			var functions = {
 				'pow' : function(x,y) {
 					return Math.pow(x,y)
@@ -59,17 +59,17 @@
 					results,
 					objString = $('#json-obj').val();
 
-				try {
+				//try {
 					if (objString) {
 						obj = JSON.parse(objString);
 					} else {
 						obj = {}
 					}
-					var result = FunctionProcessor.evaluate(formula,obj)
+					var result = FunctionProcessor.calculate(formula,obj)
 					reportSuccess(result);
-				} catch (err) {
-					reportError(err.message);
-				}
+				//} catch (err) {
+					//reportError(err.message);
+				//}
 			});
 		});
 
@@ -120,10 +120,10 @@
 			return Math.pow(x,y)
 		}
 	}
-	var fp = new FunctionProcessor(functions);
-	var formula = 'x + 5';
+	FunctionProcessor.setFunctions(functions)
+	var formula = '{x} + 5';
 	var obj = {x:20};
-	var results = fb.evaluate(formula,obj);
+	var results = FunctionProcessor.calculate(formula,obj);
 		  		</code>
 	  		</pre>
 	  	</div>
