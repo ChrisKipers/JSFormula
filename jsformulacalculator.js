@@ -6,9 +6,9 @@ var JSFormulaCalculator = (function() {
 		LIT = 3,
 		OPP = 4,
 		cacheEnabled = true,
-		presedence = {
+		precedence = {
 			'+' : {
-				presendence : 1,
+				precedence : 1,
 				func: function (a, b) {
 					return a + b;
 				},
@@ -16,7 +16,7 @@ var JSFormulaCalculator = (function() {
 				type: OPP
 			},
 			'-' : {
-				presendence : 1,
+				precedence : 1,
 				func: function (a, b) {
 					return a - b;
 				},
@@ -24,16 +24,15 @@ var JSFormulaCalculator = (function() {
 				type: OPP
 			},
 			'*' : {
-				presendence : 2,
+				precedence : 2,
 				func: function (a, b) {
-					console.log(a,b)
 					return a * b;
 				},
 				arguments: 2,
 				type: OPP
 			},
 			'/' : {
-				presendence : 2,
+				precedence : 2,
 				func: function (a, b) {
 					return a / b;
 				},
@@ -41,9 +40,9 @@ var JSFormulaCalculator = (function() {
 				type: OPP
 			},
 			'^' : {
-				presendence : 3,
+				precedence : 3,
 				func: function (a, b) {
-					return MATH.pow(a, b);
+					return Math.pow(a, b);
 				},
 				arguments: 2,
 				type: OPP
@@ -135,7 +134,7 @@ var JSFormulaCalculator = (function() {
 							continue;
 						}
 					}
-					opperator = presedence[regexMatch];
+					opperator = precedence[regexMatch];
 					tokens.push(opperator);
 					curIndex = curIndex + 1 + regexMatch.length;
 				} else {
@@ -233,7 +232,7 @@ var JSFormulaCalculator = (function() {
 						stack.push(curToken);
 					} else {
 						topOpperator = stack[stack.length -1];
-						while (topOpperator && topOpperator.presedence >= curToken.presedence) {
+						while (topOpperator && topOpperator.precedence >= curToken.precedence) {
 							postFix.push(stack.pop());
 							curStackLength = stack.length;
 							if (curStackLength > 0) {
