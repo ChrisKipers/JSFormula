@@ -88,7 +88,7 @@ var JSFormulaCalculator = (function() {
 					nextMatPosition = findClosingParan(curRemainingString);
 					token = buildTreeFromFormula(curRemainingString.substring(1,nextMatPosition));
 					tokens.push(token);
-					curIndex += curIndex + nextMatPosition + 2;
+					curIndex = curIndex + nextMatPosition + 2;
 				} else if (regexMatch = getFirstRegex(variableRegex, curRemainingString)) {
 					stripedRegex = regexMatch.replace(variableOpen,'').replace(variableEnd,'');
 					tokens.push({
