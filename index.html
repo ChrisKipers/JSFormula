@@ -21,8 +21,12 @@
 		$(document).ready(function(){
 			$('#error-div').hide();
 			$('#result-div').hide();
+			$('#error-div2').hide();
+			$('#result-div2').hide();
 			$('#json-obj').val('{"a":[1,2,3,4]}');
 			$('#formula').val('sum({a}) / len({a})');
+			$('#json-obj2').val('{"x":5,"y":{"z":20, "t":{"q":3}}}');
+			$('#formula2').val('pow({x},{y.t.q}) + {x} - {y.z} / {y.t.q}');
 			var functions = {
 				'pow' : function(x,y) {
 					return Math.pow(x,y)
@@ -59,30 +63,68 @@
 					results,
 					objString = $('#json-obj').val();
 
-				//try {
+				try {
 					if (objString) {
 						obj = JSON.parse(objString);
 					} else {
 						obj = {}
 					}
 					var result = _eval(formula,obj)
-					reportSuccess(result);
-				//} catch (err) {
-					//reportError(err.message);
-				//}
+					reportSuccess(result,'');
+				} catch (err) {
+					reportError(err.message,'');
+				}
+			});
+
+			$('#compare').click(function(){
+				var formula = $('#formula2').val(),
+					obj,
+					objString = $('#json-obj2').val(),
+					cachedTime,
+					uncachedTime,
+					start,
+					end,
+					i;
+
+				try {
+					if (objString) {
+						obj = JSON.parse(objString);
+					} else {
+						obj = {}
+					}
+					_eval.setCacheEnabled(false);
+					start = new Date();
+					for (i = 0; i < 10000; i++) {
+						_eval(formula,obj);
+					}
+					end = new Date();
+					uncachedTime = end - start;
+
+					_eval.setCacheEnabled(true);
+					start = new Date();
+					for (i = 0; i < 10000; i++) {
+						_eval(formula,obj);
+					}
+					end = new Date();
+					cachedTime = end - start;
+
+					reportSuccess('Uncached time: ' + uncachedTime + ' milliseconds, cached time: ' + cachedTime + ' milliseconds','2');
+				} catch (err) {
+					reportError(err.message,'2');
+				}
 			});
 		});
 
-		function reportError(message) {
-			$('#error-output').html(message);
-			$('#result-div').hide();
-			$('#error-div').show(150);
+		function reportError(message, pos) {
+			$('#error-output' + pos).html(message);
+			$('#result-div' + pos).hide();
+			$('#error-div' + pos).show(150);
 		}
 
-		function reportSuccess(result) {
-			$('#result-output').html(result);
-			$('#result-div').show(150);
-			$('#error-div').hide();
+		function reportSuccess(result, pos) {
+			$('#result-output' + pos).html(result);
+			$('#result-div' + pos).show(150);
+			$('#error-div' + pos).hide();
 		}
 
 	</script>
@@ -94,9 +136,9 @@
 	  			JS Formula
 	  		</h1>
 	  		<p>
-	  			JS Formula is Javascript class that enables formula evaluation without the use of eval().
+	  			JS Formula is Javascript utility that enables formula evaluation without the use of eval().
 	  			Users can perform evaluation on JSON objects using the built in mathmatical opperators 
-	  			<strong>+, - , / </strong> and <strong>*</strong> as well as define custom functions that the evaluator can use.
+	  			<strong>+, - , / </strong> and <strong>*</strong> as well as <strong>define custom functions</strong> that the evaluator can use.
 	  			<br/>
 	  			<br/>
 	  			<a href="#try">Try it out!</a>
@@ -124,7 +166,7 @@
 	_eval.setFunctions(functions)
 	var formula = '{x} + 5';
 	var obj = {x:20};
-	var results = _eval.calculate(formula,obj);
+	var results = _eval(formula,obj);
 		  		</code>
 	  		</pre>
 	  	</div>
@@ -265,6 +307,37 @@ function(a) {
 						</pre>
 					</div>
 				</div>
+			</div>
+		</div>
+		<div class="col-md-12">
+			<h2>Why is JS Formula special?</h2>
+			<p>
+			What sets JS Formula appart from other JavaScript formula evaluators is how it evaluates the formula. JS Formula does not just simply evaluate formula's, but instead <strong>builds a Formula object</strong> that can be traversed and evaluated. By taking this approach, the <strong>Formula object can be cached</strong>, which provides <strong>significant performance increase</strong> the next time the same formula string is asked to be evaluated, even with different objects.
+			</p>
+		</div>
+		<div class="col-md-12">
+	  		<h2>Compare Your Self!</h2>
+	  		<p>
+	  		The function you enter here will be evaluate 10,000 times by both the uncached version and the cached version. It will then output how long it took to evaluate the 10,000 formulas for each version. <strong>The functions in the previous demo are still available.</strong>
+	  		</p>
+		  	<form role="form">
+		  		<div class="form-group">
+		  			<label for="json-obj2">JSON Object</label>
+		  			<textarea id="json-obj2" class="form-control"></textarea>
+		  		</div>
+		  		<div class="form-group">
+		  			<label for="formula2">Formula</label>
+		  			<input type="text" class="form-control" id="formula2"/>
+		  		</div>
+		  		<input class="btn btn-primary btn-block" type="button" id="compare" value="calculate"/>
+		  	</form>
+		  	<div id="result-div2" class="alert alert-success">
+				<strong>Result</strong>
+				<span id="result-output2"></span>
+			</div>
+			<div id="error-div2" class="alert alert-danger">
+				<strong>Error</strong>
+				<span id="error-output2"></span>
 			</div>
 		</div>
 	</div>
