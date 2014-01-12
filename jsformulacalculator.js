@@ -43,7 +43,7 @@ var JSFormulaCalculator = (function() {
 			'^' : {
 				presendence : 3,
 				func: function (a, b) {
-					return MATH.pow(a, b);
+					return Math.pow(a, b);
 				},
 				arguments: 2,
 				type: OPP
