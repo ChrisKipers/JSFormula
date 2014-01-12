@@ -104,9 +104,10 @@
 	  	</div>
 	  	<h2>How to Use</h2>
 	  	<p>
-	  		To use JS Formula, just instantiate a new instance of the class FunctionProcessor with a JSON object
-	  		of key value pairs for function names to functions. Then to process a forumla call the classes method 
-	  		evaluate with the formula first followed by the object you want to evaluate. It's just that simple!
+	  		JS Formula can evaluate formulas and return the result. If you want to use variables in your formulas make sure to wrap the variable in curly braces. To access nested attributes, place a dot in between the variable names. When you evaluate your formula, place the object with the variables as the second argument.
+	  	</p>
+	  	<p>
+	  		To use your own functions in JS Formula create a key to function JSON object, and set it as the function set by calling the setFunctions method. After following these steps you can access your functions in the formula using the key you used in the JSON object.
 	  	</p>
 	  	<div>
 	  		<h2>Example</h2>
