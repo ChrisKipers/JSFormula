@@ -1,4 +1,4 @@
-var FunctionProcessor = (function() {
+var JSFormulaCalculator = (function() {
     var functions = {},
     	cache = {},
     	FUNC = 1,
@@ -344,9 +344,13 @@ var FunctionProcessor = (function() {
 			cacheEnabled = ce;
 		}
 
-	return {
-		"setFunctions" : setFunctions,
-		"calculate" : calculate,
-		'setCacheEnabled' : setCacheEnabled
-	};
+		calculate.setFunctions = setFunctions;
+		calculate.setCacheEnabled = setCacheEnabled;
+		return {
+			noConflict: function() {
+				return calculate
+			}
+		};
 }());
+
+var _eval = _eval || JSFormulaCalculator.noConflict();
