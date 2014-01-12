@@ -26,6 +26,7 @@ var JSFormulaCalculator = (function() {
 			'*' : {
 				presendence : 2,
 				func: function (a, b) {
+					console.log(a,b)
 					return a * b;
 				},
 				arguments: 2,
@@ -115,6 +116,25 @@ var JSFormulaCalculator = (function() {
 					});
 					curIndex = curIndex + 2 + closingParan;
 				} else if (regexMatch = getFirstRegex(opporatorRegex, curRemainingString)) {
+					//Handle negation use cases
+					if (regexMatch == '-') {
+						if (tokens.length == 0 || tokens[tokens.length - 1].type === OPP) {
+							nextMatPosition = curRemainingString.indexOf(' ');
+							if (nextMatPosition === -1) {
+								nextMatPosition = curRemainingString.length;
+							}
+							try {
+								tokens.push({
+									type: LIT,
+									val: Number(curRemainingString.substring(0,nextMatPosition))
+								});
+								curIndex = curIndex + 1 + nextMatPosition;
+							} catch (err) {
+								throw 'Invalid use of -; If you want to negate a variable or function times it by -1';
+							}
+							continue;
+						}
+					}
 					opperator = presedence[regexMatch];
 					tokens.push(opperator);
 					curIndex = curIndex + 1 + regexMatch.length;
