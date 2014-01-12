@@ -167,6 +167,7 @@
 	var formula = '{x} + 5';
 	var obj = {x:20};
 	var results = _eval(formula,obj);
+	//results will be 25
 		  		</code>
 	  		</pre>
 	  	</div>
@@ -340,6 +341,22 @@ function(a) {
 				<span id="error-output2"></span>
 			</div>
 		</div>
+		<div class="col-md-12">
+			<h2>Build Dynamic Reusable Functions</h2>
+			<p>
+			JS Formula is able to build functions based on formulas. The function can then be called with a an object parameter and will return the output of the formula used to define the function.
+			</p>
+		</div>
+		<div class="col-md-12">
+	  		<h2>Example</h2>
+	  		<pre>
+		  		<code>
+	var add4 = _eval.getFunction('4 + {x}');
+	var result = add4({x: 10});
+	//result will be 14
+		  		</code>
+	  		</pre>
+	  	</div>
 	</div>
 	<div>
 	</div>
