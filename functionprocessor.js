@@ -67,7 +67,8 @@ var FunctionProcessor = (function() {
 				params,
 				stripFirstParam,
 				opperator,
-				stripedRegex;
+				stripedRegex,
+				closingParan;
 
 			while (curIndex < inputLen) {
 				curRemainingString = input.substring(curIndex).trim();
@@ -99,7 +100,9 @@ var FunctionProcessor = (function() {
 					nextMatPosition = regexMatch.indexOf('(');
 					funcName = regexMatch.substring(0,nextMatPosition);
 					stripFirstParam = regexMatch.substring(nextMatPosition);
-					paramsUnparsed = findParameters(stripFirstParam.substring(1, stripFirstParam.length - 1));
+					closingParan = findClosingParan(curRemainingString);
+					//paramsUnparsed = findParameters(stripFirstParam.substring(1, stripFirstParam.length - 1));
+					paramsUnparsed = findParameters(curRemainingString.substring(nextMatPosition + 1,closingParan + 1));
 					params = [];
 					for (var i = 0, max = paramsUnparsed.length; i < max; i++) {
 						var newParam = 
@@ -110,7 +113,7 @@ var FunctionProcessor = (function() {
 						func: functions[funcName],
 						params: params
 					});
-					curIndex = curIndex + 1 + regexMatch.length;
+					curIndex = curIndex + 2 + closingParan;
 				} else if (regexMatch = getFirstRegex(opporatorRegex, curRemainingString)) {
 					opperator = presedence[regexMatch];
 					tokens.push(opperator);
@@ -155,7 +158,6 @@ var FunctionProcessor = (function() {
 				unclosedParams = 0,
 				curChar,
 				len = input.length;
-
 			while(curPos < len) {
 				curChar = input[curPos];
 				if (curChar === '(') {
@@ -163,14 +165,16 @@ var FunctionProcessor = (function() {
 					curPos++;
 				} else if(curChar === ')') {
 					unclosedParams--;
-					if (unclosedParams < 0) {
-						throw "whaaa?"
+					if (unclosedParams == -1) {
+						input = input.substring(0, curPos);
+						break;
 					}
 					curPos++;
 				} else if (curChar === ',' && unclosedParams == 0) {
 					params.push(input.substring(0,curPos));
 					input = input.substring(curPos + 1);
 					len = input.length;
+					curPos = 0;
 				} else {
 					curPos++;
 				}
@@ -316,7 +320,7 @@ var FunctionProcessor = (function() {
 			functions = newFunctions;
 			for (var prop in functions) {
 				if (functions.hasOwnProperty(prop)) {
-					functionRegexs.push('^' + prop + '\\(.*\\)');
+					functionRegexs.push('^' + prop + '\\(');
 				}
 			}
 			if (!functionRegexs) {
