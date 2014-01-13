@@ -1,3 +1,19 @@
+/*
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	THE SOFTWARE.
+*/
+
+/**
+*	This is an object that has one method, noConflict. No conflict is used to return
+*	a function that performs calculations and has function properties to set functions, enable/disable caching
+*	and set the delimiters for variables
+*
+*/
 var JSFormulaCalculator = (function() {
     var functions = {},
     	cache = {},
@@ -49,10 +65,17 @@ var JSFormulaCalculator = (function() {
 			}
 		},
 		variableOpen = '{',
-    	variableEnd = '}',
-    	variableRegex = new RegExp('^' + variableOpen + '.*?' + variableEnd),
+		variableEnd = '}',
+		variableRegex = new RegExp('^' + variableOpen + '.*?' + variableEnd),
 		functionRegex = null,
 		opporatorRegex = /^\+|^-|^\/|^\*|^\^/,
+		/**
+		*	Takes a formula and parses it into a token array
+		*	
+		*	@method tokenize
+		*	@param {String} input The formula
+		*	@return {Array} An array of tokens
+		*/
 		tokenize = function(input) {
 			var curIndex = 0,
 				tokens = [],
@@ -74,6 +97,7 @@ var JSFormulaCalculator = (function() {
 				curRemainingString = input.substring(curIndex).trim();
 				//This part of the code check for strings
 				firstChar = input.substring(curIndex, curIndex + 1);
+				//Handle cases were token is going to be a string
 				if (firstChar === '"' || firstChar === "'") {
 					nextMatPosition = input.indexOf(firstChar,curIndex + 1);
 					if (nextMatPosition == -1) {
@@ -84,11 +108,13 @@ var JSFormulaCalculator = (function() {
 						val : input.substring(curIndex,curIndex + nextMatPosition + 2)
 					});
 					curIndex += curIndex + nextMatPosition + 2;
+				//Handles cases were formula is wrapped in parenthis to override precedence
 				} else if (firstChar === '(') {
 					nextMatPosition = findClosingParan(curRemainingString);
 					token = buildTreeFromFormula(curRemainingString.substring(1,nextMatPosition));
 					tokens.push(token);
 					curIndex = curIndex + nextMatPosition + 2;
+				//Handles cases were token is a variable
 				} else if (regexMatch = getFirstRegex(variableRegex, curRemainingString)) {
 					stripedRegex = regexMatch.replace(variableOpen,'').replace(variableEnd,'');
 					tokens.push({
@@ -96,6 +122,7 @@ var JSFormulaCalculator = (function() {
 						val: stripedRegex
 					});
 					curIndex = curIndex + 1 + regexMatch.length;
+				//Handles cases were token is a function
 				} else if (regexMatch = getFirstRegex(functionRegex,curRemainingString)) {
 					nextMatPosition = regexMatch.indexOf('(');
 					funcName = regexMatch.substring(0,nextMatPosition);
@@ -114,6 +141,7 @@ var JSFormulaCalculator = (function() {
 						params: params
 					});
 					curIndex = curIndex + 2 + closingParan;
+				//Handles cases were token is an opperator
 				} else if (regexMatch = getFirstRegex(opporatorRegex, curRemainingString)) {
 					//Handle negation use cases
 					if (regexMatch == '-') {
@@ -137,6 +165,7 @@ var JSFormulaCalculator = (function() {
 					opperator = precedence[regexMatch];
 					tokens.push(opperator);
 					curIndex = curIndex + 1 + regexMatch.length;
+				//Handles cases were the token is a number litteral
 				} else {
 					nextMatPosition = curRemainingString.indexOf(' ');
 					if (nextMatPosition === -1) {
@@ -158,6 +187,14 @@ var JSFormulaCalculator = (function() {
 			}
 			return tokens;
 		},
+		/**
+		*	Returns the first Regex match or null if none is found
+		*	
+		*	@method getFirstRegex
+		*	@param {RegExp} regex Regular expression to compare against the string
+		*	@param {String} string The string to find a match in
+		*	@return {String} The first regex match or null if none is found
+		*/
 		getFirstRegex = function(regex,string) {
 			if (regex) {
 				var results = regex.exec(string);
@@ -171,6 +208,13 @@ var JSFormulaCalculator = (function() {
 			}
 			
 		},
+		/**
+		*	Returns an array of formulas inside a comma delimited parentheses
+		*	
+		*	@method findParameters
+		*	@param {String} input Contents inside of parentheses including wrapping parentheses
+		*	@return {Array} Array of formulas
+		*/
 		findParameters = function(input) {
 			var curPos = 0,
 				params = [],
@@ -201,6 +245,13 @@ var JSFormulaCalculator = (function() {
 			params.push(input);
 			return params;
 		},
+		/**
+		*	Returns the index of the closing parentheses in a string
+		*	
+		*	@method findClosingParan
+		*	@param {String} input Contents inside of parentheses including wrapping parentheses
+		*	@return {Integer} Index of the closing parenthesis
+		*/
 		findClosingParan = function(input) {
 			var numberOfUnclosed = 0,
 				currentChar;
@@ -217,6 +268,13 @@ var JSFormulaCalculator = (function() {
 			}
 			throw "No Closing Parentheses found";
 		},
+		/**
+		*	Reorders the tokens into postfix based on the precedence of the operators
+		*	
+		*	@method infixToPostFix
+		*	@param {Array} tokens An array of tokens
+		*	@return {Array} The tokens reorder based on the precedence of the operators
+		*/
 		infixToPostFix = function(tokens) {
 			var stack =[],
 				postFix = [],
@@ -250,6 +308,13 @@ var JSFormulaCalculator = (function() {
 			}
 			return postFix;
 		},
+		/**
+		*	Builds a tree with the tokens.
+		*	
+		*	@method buildTree
+		*	@param {Array} postFix An array of tokens
+		*	@return {Object} A tree that can be evaluated by the evalTree method
+		*/
 		buildTree = function(postFix) {
 			var i = 0,
 				max = postFix.length,
@@ -287,6 +352,14 @@ var JSFormulaCalculator = (function() {
 			}
 			return postFix[0];
 		},
+		/**
+		*	Evaluates a tree with a given object
+		*	
+		*	@method evalTree
+		*	@param {Object} tree The tree to be evaluated
+		*	@param {Object} object The object that will be used to populate the variables
+		*	@return {Object} The result of the tree evaluation with the given object
+		*/
 		evalTree = function(tree, object) {
 			if (tree.type === FUNC) {
 				var paramResults = [];
@@ -300,6 +373,14 @@ var JSFormulaCalculator = (function() {
 				return tree.val;
 			}
 		},
+		/**
+		*	Determines the value of a variable for the given object
+		*	
+		*	@method evalVar
+		*	@param {String} variable A string representing a variable Ex: x.y
+		*	@param {Object} object The object that the variable will be evaluated against
+		*	@return {Object} Value of the variable in the provided object
+		*/
 		evalVar = function (variable, object) {
 			var path = variable.split('.');
 			var curObject = object;
@@ -308,6 +389,14 @@ var JSFormulaCalculator = (function() {
 			}
 			return curObject;
 		},
+		/**
+		*	A wrapper method that handles tokenizing the input, rearranging the tokens into postfix,
+		*	and building the tree. It also handles caching trees based on the input if the caching feature is enabled (the default)
+		*	
+		*	@method buildTreeFromFormula
+		*	@param {String} input The formula used to build the tree
+		*	@return {Object} A tree that can be evaluated by the evalTree method
+		*/
 		buildTreeFromFormula = function(input) {
 			var tree,
 				tokens,
@@ -329,10 +418,25 @@ var JSFormulaCalculator = (function() {
 				return tree;
 			}
 		},
+		/**
+		*	A wrapper method that retreves a tree for a given formula and evaluates it against
+		*	the given object. This is the functions that gets called by _eval
+		*
+		*	@method calculate
+		*	@param {String} input The formula used to retrieve the tree
+		*	@param {string} object The object that will be used to populate the variables
+		*	@return {Object} The result of the formula with the object used to populate variable values
+		*/
 		calculate = function(input, object) {
 			var tree = buildTreeFromFormula(input);
 			return evalTree(tree, object);
 		},
+		/**
+		*	Sets the functions that can be used in the formulas
+		*
+		*	@method setFunctions
+		*	@param {Object} newFunctions A map of function names to functions
+		*/
 		setFunctions = function(newFunctions) {
 			var functionRegexs = [],
 				regexString;
@@ -348,8 +452,14 @@ var JSFormulaCalculator = (function() {
 				regexString = functionRegexs.join('|');
 				functionRegex = new RegExp(regexString);
 			}
-			return this;
 		},
+		/**
+		*	Sets the strings that will be used to wrap a variable for parsing
+		*
+		*	@method setVarDelimiter
+		*	@param {String} open The string that signifies the start of a variable
+		*	@param {String} close The string that signifies the end of a variable
+		*/
 		setVarDelimiter = function(open, close) {
 			if (open && close) {
 				variableOpen = open;
@@ -359,9 +469,22 @@ var JSFormulaCalculator = (function() {
 				variableRegex = null;
 			}
 		},
+		/**
+		*	Sets whether caching is enabled (default) or disabled
+		*
+		*	@method setCacheEnabled
+		*	@param {Boolean} ce Caching enabled
+		*/
 		setCacheEnabled = function(ce) {
 			cacheEnabled = ce;
 		},
+		/**
+		*	Builds an executable function which accepts an object as a parameter
+		*
+		*	@method buildFunction
+		*	@param {String} formula The formula that will be evaluated
+		*	@return {Function} an executable function which accepts an object as a parameter
+		*/
 		buildFunction = function(formula) {
 			var tree = buildTreeFromFormula(formula);
 			var newFunction = function(object) {
@@ -370,6 +493,8 @@ var JSFormulaCalculator = (function() {
 			return newFunction;
 		}
 
+		//Add methods to the calculate method, since we are returning the function calculate,
+		//So that it can behave like jQuery
 		calculate.setFunctions = setFunctions;
 		calculate.setCacheEnabled = setCacheEnabled;
 		calculate.getFunction = buildFunction;
@@ -380,4 +505,5 @@ var JSFormulaCalculator = (function() {
 		};
 }());
 
+//Set the global variable _eval if it has a false value
 var _eval = _eval || JSFormulaCalculator.noConflict();
